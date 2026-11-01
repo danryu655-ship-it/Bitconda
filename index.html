@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bitconda — Snake NFT Mint</title>
+<style>
+body{font-family:system-ui,sans-serif;background:#0b1020;color:#e8ecff;margin:0;padding:24px}
+h1{font-size:32px} .card{background:#141b36;border:1px solid #2a3566;border-radius:16px;padding:20px;margin:16px 0}
+button{background:#f5c542;color:#111;border:0;border-radius:12px;padding:12px 20px;font-weight:700;cursor:pointer}
+button:disabled{opacity:.5;cursor:not-allowed}
+table{width:100%;border-collapse:collapse} td,th{border-bottom:1px solid #2a3566;padding:8px;text-align:left}
+small{color:#9aa7d8}
+</style>
+</head>
+<body>
+<h1>🐍 Bitconda</h1>
+<p>A 5,000-piece snake NFT collection on BNB Smart Chain. Connect your wallet, solve the puzzle, and mint. The more people mint, the harder it gets.</p>
+
+<div class="card">
+<h2>Live Mint Progress</h2>
+<p><b id="livestatus">Loading on-chain mint count...</b></p>
+<div style="background:#0b1020;border:1px solid #2a3566;border-radius:12px;height:20px;overflow:hidden"><div id="mintbar" style="background:#f5c542;height:100%;width:0%"></div></div>
+<p><small id="livedetail">Reading totalMinted() from BNB Smart Chain, no wallet needed.</small></p>
+</div>
+
+<div class="card">
+<h2>Mint</h2>
+<p>Contract status: <b id="status">LIVE ON BNB SMART CHAIN MAINNET — contract deployed 2026-10-31, block 130800878. Mint is active: connect a wallet, solve the puzzle in your browser, then confirm in your wallet.</b></p>
+<p>Wallet: <span id="wallet">not connected</span></p>
+<p>On-chain status: <span id="chainstatus">connect a wallet to load it</span></p>
+<button id="connect">Connect Wallet</button>
+<label>Quantity: <input id="qty" type="number" min="1" max="5" value="1" style="width:60px;padding:8px;border-radius:8px"></label>
+<button id="mint" disabled>Solve Puzzle &amp; Mint</button>
+<p id="progress"></p>
+<p id="result"></p>
+<p><small>Contract address: <code id="contract">0x4e98931B1Ac5037cD1351CF71ACE8d30900834CC</code></small></p>
+<p><small>How the puzzle works (once the puzzle contract is live): find a nonce so that hash(wallet, tokenId, nonce) has the required leading zero bits for the phase. Difficulty: #1–1000 = 20 bits, #1001–2500 = 22 bits, #2501–4000 = 23 bits, #4001–5000 = 24 bits.</small></p>
+</div>
+
+<div class="card">
+<h2>Mint via Binance Agent — Copy This Prompt</h2>
+<p>Don't want to solve the puzzle in your browser? Copy the prompt below and paste it to your Binance Agent. Your agent must solve the puzzle first, show you a clean preview, and only execute after you say yes.</p>
+<textarea id="agentprompt" rows="14" style="width:100%;background:#0b1020;color:#e8ecff;border:1px solid #2a3566;border-radius:12px;padding:12px;font-family:monospace" readonly>Please mint 1 Bitconda NFT for me on BNB Smart Chain (chain 56).
+Contract: 0x4e98931B1Ac5037cD1351CF71ACE8d30900834CC (Bitconda, BITCONDA, max supply 5000).
+Steps:
+1. Read totalMinted() to get the next tokenId, and currentDifficulty() for its phase.
+2. Solve the proof-of-work puzzle: find a nonce so that keccak256(abi.encodePacked(myWallet, tokenId, nonce)) has at least the required leading zero bits (Phase 1 #1-1000 = 20 bits, Phase 2 #1001-2500 = 22 bits, Phase 3 #2501-4000 = 23 bits, Phase 4 #4001-5000 = 24 bits).
+3. Check the price for that phase on-chain (Phase 1 free, max 2 per wallet; Phase 2 = pricePhase2, Phase 3 = pricePhase3, Phase 4 = pricePhase4, all in BNB) and check freeMinted(myWallet).
+4. Show me a clean preview of mint(1, [nonce]) with the correct value, and do NOT execute until I confirm.
+5. After execution, verify on-chain that I own the new tokenId and report its tokenURI.
+Safety: never ask for my private key or seed phrase. Show the preview first, and revoke any approval this mint creates afterwards if there is one.</textarea>
+<button id="copyprompt">Copy Prompt for My Binance Agent</button>
+<p id="copyresult"><small>Tip: change "1" to the quantity you want, but one transaction may not cross a phase boundary (1000 / 2500 / 4000).</small></p>
+</div>
+
+<div class="card">
+<h2>Why Is This Challenging? — Rank Explained</h2>
+<p>Minting Bitconda is not just a click. Every mint must <b>solve a puzzle</b> first: find a nonce so that hash(wallet, tokenId, nonce) has the required leading zero bits. The more people mint, the harder the puzzle gets.</p>
+<table>
+<tr><th>Rank</th><th>Why It's Challenging</th></tr>
+<tr><td>🥉 Uncommon (60%)</td><td>The starting point. The lightest puzzle, but you still have to solve it — no free click.</td></tr>
+<tr><td>🥈 Rare (25%)</td><td>Rarer, with more detail. Patient solvers in the early phases have a better shot.</td></tr>
+<tr><td>🥇 Epic (10%)</td><td>Only 500 out of 5,000. A harder puzzle + blinking lightning animation. Getting an Epic proves you beat a tougher challenge.</td></tr>
+<tr><td>👑 Legend (5%)</td><td>Only 250 out of 5,000 — the top rank. The hardest puzzle + full animation (eyes, tongue, and active aura). This is the Bitconda trophy.</td></tr>
+</table>
+<p><small>Simple rule: the fastest + strongest puzzle solvers get the top ranks. Once all 5,000 are gone, there is no more minting.</small></p>
+</div>
+
+<div class="card">
+<h2>Price — Paid in BNB, Not USDT</h2>
+<p>The $1 / $3 / $5 prices are <b>converted directly to BNB</b> at deployment, and payment is in <b>native BNB</b> (not USDT, not another token). Minters just need BNB for the price + gas — no need to buy USDT first.</p>
+<p><small>Conversion example (not the final numbers, recalculated at deployment from the BNB price at that time): if BNB is ~$703, then $1 ≈ 0.00142 BNB, $3 ≈ 0.00427 BNB, $5 ≈ 0.00711 BNB. The final numbers in the contract are fixed BNB amounts set by the owner at deployment.</small></p>
+</div>
+
+<div class="card">
+<h2>Mint Phases</h2>
+<table>
+<tr><th>Phase</th><th>Tokens</th><th>Price</th></tr>
+<tr><td>1</td><td>#1–1000</td><td>Free (max 2/wallet)</td></tr>
+<tr><td>2</td><td>#1001–2500</td><td>$1 in BNB</td></tr>
+<tr><td>3</td><td>#2501–4000</td><td>$3 in BNB</td></tr>
+<tr><td>4</td><td>#4001–5000</td><td>$5 in BNB</td></tr>
+</table>
+<p><small>Creator royalty 5%. Mint proceeds go to the owner wallet.</small></p>
+</div>
+
+<div class="card">
+<h2>Rarity</h2>
+<table>
+<tr><th>Rarity</th><th>%</th><th>Supply</th><th>Animation</th></tr>
+<tr><td>Uncommon</td><td>60%</td><td>3,000</td><td>Static image</td></tr>
+<tr><td>Rare</td><td>25%</td><td>1,250</td><td>Static image</td></tr>
+<tr><td>Epic</td><td>10%</td><td>500</td><td>Blinking lightning</td></tr>
+<tr><td>Legend</td><td>5%</td><td>250</td><td>Eyes + tongue + active aura</td></tr>
+</table>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+<script>
+// Bitconda — deployed mainnet 2026-10-31, block 130800878.
+const CONTRACT_ADDRESS = "0x4e98931B1Ac5037cD1351CF71ACE8d30900834CC";
+const ABI = [
+  "function totalMinted() view returns (uint256)",
+  "function currentDifficulty() view returns (uint256)",
+  "function difficultyFor(uint256) pure returns (uint256)",
+  "function pricePhase2() view returns (uint256)",
+  "function pricePhase3() view returns (uint256)",
+  "function pricePhase4() view returns (uint256)",
+  "function freeMinted(address) view returns (uint256)",
+  "function mint(uint256 quantity, uint256[] nonces) payable"
+];
+let provider, signer, contract, account;
+const $ = id => document.getElementById(id);
+async function loadLiveProgress() {
+  try {
+    const readProvider = new ethers.providers.JsonRpcProvider('https://bsc-dataseed.binance.org');
+    const readContract = new ethers.Contract(CONTRACT_ADDRESS, ["function totalMinted() view returns (uint256)"], readProvider);
+    const total = await readContract.totalMinted();
+    const minted = total.toNumber(), remaining = 5000 - minted, pct = (minted / 5000 * 100).toFixed(2);
+    $('livestatus').textContent = `Minted ${minted.toLocaleString()} / 5,000 — Remaining ${remaining.toLocaleString()} — Next token #${minted + 1}`;
+    $('mintbar').style.width = Math.max(pct, minted > 0 ? 0.5 : 0) + '%';
+    $('livedetail').textContent = `${pct}% minted. This updates from the chain every time the page loads; connect a wallet below for your personal status.`;
+  } catch (e) { $('livestatus').textContent = 'Live mint count could not be loaded right now. Connect a wallet below to see on-chain status.'; }
+}
+loadLiveProgress();
+function leadingZeroBits(hash) {
+  const bytes = ethers.utils.arrayify(hash);
+  let bits = 0;
+  for (const b of bytes) {
+    if (b === 0) { bits += 8; continue; }
+    for (let i = 7; i >= 0; i--) { if ((b >> i) & 1) return bits; bits++; }
+    return bits;
+  }
+  return bits;
+}
+async function loadStatus() {
+  const total = await contract.totalMinted();
+  const next = total.toNumber() + 1;
+  const diff = await contract.currentDifficulty();
+  const free = await contract.freeMinted(account);
+  const p2 = await contract.pricePhase2();
+  const p3 = await contract.pricePhase3();
+  const p4 = await contract.pricePhase4();
+  let price = ethers.BigNumber.from(0), phase = 1, blocked = false;
+  if (next > 1000 && next <= 2500) { price = p2; phase = 2; }
+  else if (next > 2500 && next <= 4000) { price = p3; phase = 3; }
+  else if (next > 4000) { price = p4; phase = 4; }
+  else if (free.toNumber() >= 2) { blocked = true; }
+  $('chainstatus').textContent = blocked
+    ? `Minted ${total} / 5000 — next token #${next} — Phase 1 free quota already used (2/2). You cannot mint more until Phase 2 starts at #1001.`
+    : `Minted ${total} / 5000 — next token #${next} — Phase ${phase} — difficulty ${diff} bits — price per token ${ethers.utils.formatEther(price)} BNB — your free mints used ${free}/2`;
+  return { next, diff: diff.toNumber(), price, free: free.toNumber(), blocked };
+}
+$('connect').onclick = async () => {
+  if (!window.ethereum) { alert('Please install MetaMask / a browser wallet first.'); return; }
+  try {
+    provider = new ethers.providers.Web3Provider(window.ethereum);
+    await provider.send('eth_requestAccounts', []);
+    const net = await provider.getNetwork();
+    if (net.chainId !== 56) {
+      try { await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x38' }] }); }
+      catch (e) {
+        if (e.code === 4902) await window.ethereum.request({ method: 'wallet_addEthereumChain', params: [{ chainId: '0x38', chainName: 'BNB Smart Chain', nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 }, rpcUrls: ['https://bsc-dataseed.binance.org'], blockExplorerUrls: ['https://bscscan.com'] }] });
+        else throw e;
+      }
+      provider = new ethers.providers.Web3Provider(window.ethereum);
+    }
+    signer = provider.getSigner();
+    account = await signer.getAddress();
+    $('wallet').textContent = account;
+    contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+    await loadStatus();
+    $('mint').disabled = false;
+  } catch (e) { alert('Connection failed: ' + (e.message || e)); }
+};
+$('copyprompt').onclick = async () => {
+  try { await navigator.clipboard.writeText($('agentprompt').value); $('copyresult').textContent = 'Prompt copied. Paste it to your Binance Agent.'; }
+  catch (e) { $('agentprompt').select(); document.execCommand('copy'); $('copyresult').textContent = 'Prompt selected — press Ctrl+C / Cmd+C to copy.'; }
+};
+$('mint').onclick = async () => {
+  $('mint').disabled = true;
+  $('result').textContent = '';
+  try {
+    const qty = Math.max(1, Math.min(5, parseInt($('qty').value || '1', 10)));
+    const st = await loadStatus();
+    if (st.blocked) throw new Error('Phase 1 free quota already used (2/2). Wait until Phase 2 (#1001).');
+    if (st.next <= 1000 && st.free + qty > 2) throw new Error(`Phase 1 free quota is 2 per wallet (you used ${st.free}). Lower the quantity to ${2 - st.free}.`);
+    // Phase-boundary check: one tx may not cross a phase boundary.
+    const bounds = [1000, 2500, 4000, 5000];
+    for (const b of bounds) { if (st.next <= b && st.next + qty - 1 > b) throw new Error(`Quantity ${qty} would cross a phase boundary at #${b}. Lower the quantity.`); }
+    const nonces = [];
+    for (let i = 0; i < qty; i++) {
+      const tokenId = st.next + i;
+      const diff = (await contract.difficultyFor(tokenId)).toNumber();
+      $('progress').textContent = `Solving token #${tokenId} (difficulty ${diff} bits)... this can take minutes. Keep this tab open.`;
+      let nonce = 0, found = null, tries = 0;
+      const started = Date.now();
+      while (found === null) {
+        const hash = ethers.utils.solidityKeccak256(['address', 'uint256', 'uint256'], [account, tokenId, nonce]);
+        if (leadingZeroBits(hash) >= diff) { found = nonce; break; }
+        nonce++; tries++;
+        if (tries % 5000 === 0) {
+          $('progress').textContent = `Solving token #${tokenId} (difficulty ${diff} bits)... ${tries.toLocaleString()} tries, ${Math.round((Date.now() - started) / 1000)}s elapsed. Keep this tab open.`;
+          await new Promise(r => setTimeout(r, 0));
+        }
+      }
+      nonces.push(found);
+      $('progress').textContent = `Token #${tokenId} solved: nonce ${found} (${tries.toLocaleString()} tries).`;
+    }
+    const value = st.price.mul(qty);
+    $('progress').textContent = `Solutions found. Confirm the mint in your wallet (${ethers.utils.formatEther(value)} BNB + gas)...`;
+    const tx = await contract.mint(qty, nonces, { value });
+    $('progress').textContent = `Mint sent: ${tx.hash}. Waiting for confirmation...`;
+    const rc = await tx.wait();
+    const first = st.next, last = st.next + qty - 1;
+    $('result').innerHTML = `Minted! Token${qty > 1 ? 's' : ''} #${first}${qty > 1 ? '–#' + last : ''} — <a href="https://bscscan.com/tx/${tx.hash}" target="_blank" rel="noopener">view on BscScan</a>`;
+    $('progress').textContent = '';
+    await loadStatus();
+  } catch (e) {
+    $('progress').textContent = 'Mint failed or cancelled: ' + (e.message || e);
+  }
+  $('mint').disabled = false;
+};
+</script>
+</body>
+</html>
